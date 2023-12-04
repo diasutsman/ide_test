@@ -1,16 +1,6 @@
-# ide_test
+# IDE Examination
 
-A new Flutter project.
+## Signature :
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Signature memastikan data yang dikirimkan adalah asli dan tidak bisa disanggah. Signature dihasilkan oleh pemakai layanan dan diverifikasi oleh penerima layanan.
+Signature dibentuk dari payload yang sudah ditentukan, dengan mengimplementasikan algoritma SHA256-HMAC dengan Consumer Secret sebagai kuncinya. Kemudian, akan dilakukan enkripsi dari signature ini dengan menggunakan Base64. Hasil akhirnya akan diletakkan di atribut IDE-Signature di Header.
