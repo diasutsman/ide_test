@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
+import 'package:ide_test/models/banners_model.dart';
 import 'package:ide_test/models/login_model.dart';
 import 'package:ide_test/models/oauth_token_model.dart';
 import 'package:ide_test/services/shared_preferences_service.dart';
@@ -144,7 +145,7 @@ class IdeService {
     // print('clientSecret $clientSecretC');
   }
 
-  static Future<void> listBanner() async {
+  static Future<List<BannerData>> listBanner() async {
     const url = "$baseUrl/api/list-banner";
     print("listBanner");
     print("url: $url");
@@ -199,7 +200,13 @@ class IdeService {
 
     if (response.statusCode != 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
-      return Future.error(responseJson['message']);
+      return Future.error(responseJson['responseSystemMessage']);
     }
+
+    Map<String, dynamic> responseJson = jsonDecode(response.body);
+
+    final bannerModel = BannersModel.fromJson(responseJson);
+
+    return bannerModel.responseData;
   }
 }

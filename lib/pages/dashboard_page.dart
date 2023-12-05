@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ide_test/models/banners_model.dart';
 import 'package:ide_test/pages/add_banner_page.dart';
 import 'package:ide_test/pages/login_page.dart';
 import 'package:ide_test/services/ide_service.dart';
@@ -57,11 +58,43 @@ class DashboardPage extends StatelessWidget {
               child: FutureBuilder(
                   future: IdeService.listBanner(),
                   builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text("Terjadi Error"),
+                      );
+                    }
                     return ListView.builder(
                       itemBuilder: (context, index) {
-                        return Text('data $index');
+                        BannerData bannerData =
+                            snapshot.data?[index] as BannerData;
+                        return Card(
+                          elevation: 8,
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Image.network(bannerData.bannerImage),
+                                Text(
+                                  bannerData.bannerName,
+                                  style: const TextStyle(fontSize: 24),
+                                ),
+                                Text(
+                                  bannerData.isActive ? "Aktif" : "Tidak Aktif",
+                                )
+                              ],
+                            ),
+                          ),
+                        );
                       },
-                      itemCount: 10,
+                      itemCount: snapshot.data?.length,
                     );
                   }),
             ),
