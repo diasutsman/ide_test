@@ -3,12 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SharedPreferencesService {
   static SharedPreferences? _preferences;
 
-  static const loggedInKey = 'logged_in_key';
-  static const cliendIdKey = 'client_id_key';
-  static const clientIdSecretKey = 'client_secret_key';
-  static const cliendSecretKey = 'client_secret_key';
-  static const accessTokenKey = 'access_token_key';
-  static const refreshTokenKey = 'refresh_token_key';
+  static const loggedInKey = 'logged_in';
+  static const clientIdKey = 'client_id';
+  static const clientIdSecretKey = 'client_secret';
+  static const clientSecretKey = 'client_secret';
+  static const accessTokenKey = 'access_token';
+  static const refreshTokenKey = 'refresh_token';
 
   static Future<void> initialize() async {
     _preferences = await SharedPreferences.getInstance();
@@ -19,12 +19,38 @@ class SharedPreferencesService {
     required String clientSecret,
   }) async {
     await _preferences?.setBool(loggedInKey, true);
-    await _preferences?.setString(cliendIdKey, cliendIdKey);
+    await _preferences?.setString(clientIdKey, cliendId);
     await _preferences?.setString(clientIdSecretKey, clientSecret);
   }
 
-  static T get<T>(String key) {
-    return _preferences?.get(key) as T;
+  static Future<void> setAccessToken(String accessToken) async {
+    await _preferences?.setString(accessTokenKey, accessToken);
+  }
+
+  static String getAccessToken() {
+    return _preferences?.getString(accessTokenKey) ?? '';
+  }
+
+  static Future<void> setRefreshToken(String refreshtoken) async {
+    await _preferences?.setString(refreshTokenKey, refreshtoken);
+  }
+
+  static String getRefreshToken() {
+    return _preferences?.getString(refreshTokenKey) ?? '';
+  }
+
+  static T? get<T>(String key) {
+    if (T == String) {
+      return _preferences?.getString(key) as T?;
+    } else if (T == int) {
+      return _preferences?.getInt(key) as T?;
+    } else if (T == double) {
+      return _preferences?.getDouble(key) as T?;
+    } else if (T == bool) {
+      return _preferences?.getBool(key) as T?;
+    }
+
+    return _preferences?.get(key) as T?;
   }
 
   static Future<bool> set(String key, dynamic value) async {
@@ -33,13 +59,13 @@ class SharedPreferencesService {
     }
 
     if (value is String) {
-      return await _preferences?.setString(key, value) ?? false;
+      await _preferences?.setString(key, value) ?? false;
     } else if (value is int) {
-      return await _preferences?.setInt(key, value) ?? false;
+      await _preferences?.setInt(key, value) ?? false;
     } else if (value is double) {
-      return await _preferences?.setDouble(key, value) ?? false;
+      await _preferences?.setDouble(key, value) ?? false;
     } else if (value is bool) {
-      return await _preferences?.setBool(key, value) ?? false;
+      await _preferences?.setBool(key, value) ?? false;
     }
 
     return false;
@@ -47,12 +73,12 @@ class SharedPreferencesService {
 
   static Future<void> logout() async {
     await _preferences?.setBool(loggedInKey, false);
-    await _preferences?.remove(cliendIdKey);
+    await _preferences?.remove(clientIdKey);
     await _preferences?.remove(clientIdSecretKey);
   }
 
   static String get clientId {
-    return _preferences?.getString(cliendIdKey) ?? '';
+    return _preferences?.getString(clientIdKey) ?? '';
   }
 
   static String get clientSecret {

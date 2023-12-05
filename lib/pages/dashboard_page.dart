@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ide_test/pages/add_banner_page.dart';
 import 'package:ide_test/pages/login_page.dart';
+import 'package:ide_test/services/ide_service.dart';
+import 'package:ide_test/services/shared_preferences_service.dart';
 
 class DashboardPage extends StatelessWidget {
   @override
@@ -17,9 +19,10 @@ class DashboardPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => AddBannerPage()),
                 );
               } else if (value == 'logout') {
+                SharedPreferencesService.logout();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               }
             },
@@ -51,18 +54,16 @@ class DashboardPage extends StatelessWidget {
           children: [
             SizedBox(height: 16.0),
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16.0,
-                crossAxisSpacing: 16.0,
-                children: [
-                  Text('Data 1'),
-                  Text('Data 2'),
-                  Text('Data 3'),
-                  Text('Data 4'),
-                  Text('Data 5'),
-                ],
-              ),
+              child: FutureBuilder(
+                  future: IdeService.listBanner(),
+                  builder: (context, snapshot) {
+                    return ListView.builder(
+                      itemBuilder: (context, index) {
+                        return Text('data $index');
+                      },
+                      itemCount: 10,
+                    );
+                  }),
             ),
           ],
         ),
