@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                       final password = _passwordController.text;
 
                       try {
-                        await IdeService.login(email, password);
+                        await IdeService.login(email: email, password: password);
 
                         Navigator.pushReplacement(
                           context,

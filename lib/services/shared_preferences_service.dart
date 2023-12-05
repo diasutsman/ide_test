@@ -3,9 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SharedPreferencesService {
   static SharedPreferences? _preferences;
 
-  static const _loggedInKey = 'logged_in_key';
-  static const _cliendIdKey = 'client_id_key';
-  static const _cliendSecretKey = 'client_secret_key';
+  static const loggedInKey = 'logged_in_key';
+  static const cliendIdKey = 'client_id_key';
+  static const clientIdSecretKey = 'client_secret_key';
+  static const cliendSecretKey = 'client_secret_key';
+  static const accessTokenKey = 'access_token_key';
+  static const refreshTokenKey = 'refresh_token_key';
 
   static Future<void> initialize() async {
     _preferences = await SharedPreferences.getInstance();
@@ -15,27 +18,49 @@ class SharedPreferencesService {
     required String cliendId,
     required String clientSecret,
   }) async {
-    await _preferences?.setBool(_loggedInKey, true);
-    await _preferences?.setString(_cliendIdKey, _cliendIdKey);
-    await _preferences?.setString(_cliendSecretKey, clientSecret);
+    await _preferences?.setBool(loggedInKey, true);
+    await _preferences?.setString(cliendIdKey, cliendIdKey);
+    await _preferences?.setString(clientIdSecretKey, clientSecret);
+  }
+
+  static T get<T>(String key) {
+    return _preferences?.get(key) as T;
+  }
+
+  static Future<bool> set(String key, dynamic value) async {
+    if (_preferences != null) {
+      return false;
+    }
+
+    if (value is String) {
+      return await _preferences?.setString(key, value) ?? false;
+    } else if (value is int) {
+      return await _preferences?.setInt(key, value) ?? false;
+    } else if (value is double) {
+      return await _preferences?.setDouble(key, value) ?? false;
+    } else if (value is bool) {
+      return await _preferences?.setBool(key, value) ?? false;
+    }
+
+    return false;
   }
 
   static Future<void> logout() async {
-    await _preferences?.setBool(_loggedInKey, false);
-    await _preferences?.remove(_cliendIdKey);
-    await _preferences?.remove(_cliendSecretKey);
+    await _preferences?.setBool(loggedInKey, false);
+    await _preferences?.remove(cliendIdKey);
+    await _preferences?.remove(clientIdSecretKey);
   }
 
   static String get clientId {
-    return _preferences?.getString(_cliendIdKey) ?? '';
+    return _preferences?.getString(cliendIdKey) ?? '';
   }
 
   static String get clientSecret {
-    return _preferences?.getString(_cliendSecretKey) ?? '';
+    return _preferences?.getString(clientIdSecretKey) ?? '';
   }
 
   static bool get isLoggedIn {
-    return _preferences?.getBool(_loggedInKey) ?? false;
+    return _preferences?.getBool(loggedInKey) ?? false;
   }
 
   static Future<bool> clear() async {

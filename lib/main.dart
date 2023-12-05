@@ -3,9 +3,9 @@ import 'package:ide_test/pages/dashboard_page.dart';
 import 'package:ide_test/pages/login_page.dart';
 import 'package:ide_test/services/shared_preferences_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SharedPreferencesService.initialize();
+  await SharedPreferencesService.initialize();
   runApp(const MyApp());
 }
 
