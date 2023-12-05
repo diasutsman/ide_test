@@ -10,6 +10,10 @@ import 'package:crypto/crypto.dart';
 class IdeService {
   static const String baseUrl = "https://api-entrance-test.infraedukasi.com";
 
+  static String _encodeMap(Map data) {
+    return data.keys.map((key) => "$key=${data[key]}").join("&");
+  }
+
   static String generateSignature({
     required String path,
     required String verb,
@@ -19,13 +23,15 @@ class IdeService {
     required String userSecret,
   }) {
     String base64Key = base64Encode(utf8.encode(userSecret));
-    String message = Uri(queryParameters: {
+    String message = _encodeMap({
       'path': path,
       'verb': verb.toUpperCase(),
       'token': token,
       'timestamp': timestamp,
       'body': body,
-    }).query;
+    });
+
+    print("Payload: $message");
 
     List<int> messageBytes = utf8.encode(message);
     List<int> key = base64.decode(base64Key);
@@ -168,7 +174,7 @@ class IdeService {
     final signature = generateSignature(
       path: '/list-banner',
       verb: 'GET',
-      token: accessToken,
+      token: 'Bearer $accessToken',
       timestamp: timestamp,
       body: '',
       userSecret: clientSecret,
