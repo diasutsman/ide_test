@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:ide_test/models/banners_model.dart';
 import 'package:ide_test/models/login_model.dart';
 import 'package:ide_test/models/oauth_token_model.dart';
 import 'package:ide_test/services/shared_preferences_service.dart';
 import 'package:crypto/crypto.dart';
+import 'package:path/path.dart';
 
 class IdeService {
   static const String baseUrl = "https://api-entrance-test.infraedukasi.com";
@@ -21,7 +21,7 @@ class IdeService {
     required String verb,
     required String token,
     required String timestamp,
-    required String body,
+    dynamic body,
     required String userSecret,
   }) {
     String base64Key = base64Encode(utf8.encode(userSecret));
@@ -238,7 +238,6 @@ class IdeService {
     );
 
     final headers = <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
       'Content-Type': 'multipart/form-data',
       'Authorization': token,
       'IDE-Timestamp': timestamp,
@@ -251,9 +250,11 @@ class IdeService {
     request.headers.addAll(headers);
     request.fields['banner_name'] = bannerName;
     request.files.add(
-      http.MultipartFile.fromBytes(
+      await http.MultipartFile.fromPath(
         'banner_image',
-        await File.fromUri(Uri.parse(bannerPath)).readAsBytes(),
+        bannerPath,
+        filename: basename(bannerPath),
+        contentType: MediaType('image', 'jpeg'),
       ),
     );
 

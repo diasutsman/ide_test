@@ -93,8 +93,9 @@ class _AddBannerPageState extends State<AddBannerPage> {
                             msg: "Berhasil menambahkan banner");
 
                         Navigator.pop(context);
-                      } catch (e) {
+                      } catch (e, stacktrace) {
                         print(e.toString());
+                        print(stacktrace.toString());
                         showDialog(
                           context: context,
                           builder: (context) {
