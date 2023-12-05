@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:ide_test/models/banners_model.dart';
@@ -157,20 +158,11 @@ class IdeService {
       SharedPreferencesService.clientIdKey,
     ).toString();
 
-    final refreshToken = SharedPreferencesService.get<String>(
-      SharedPreferencesService.refreshTokenKey,
-    ).toString();
-
     final clientSecret = SharedPreferencesService.get<String>(
       SharedPreferencesService.clientSecretKey,
     ).toString();
 
     final timestamp = DateTime.now().toUtc().toIso8601String();
-
-    print('accessToken: $accessToken');
-    print('clientId: $clientId');
-    print('clientSecret: $clientSecret');
-    print('refreshToken: $refreshToken');
 
     final signature = generateSignature(
       path: '/list-banner',
@@ -208,5 +200,81 @@ class IdeService {
     final bannerModel = BannersModel.fromJson(responseJson);
 
     return bannerModel.responseData;
+  }
+
+  static Future<void> addBanner({
+    required String bannerName,
+    required String bannerPath,
+  }) async {
+    const url = "$baseUrl/api/add-banner";
+    print("addBanner");
+    print("url: $url");
+    print("bannerName: $bannerName");
+    print("bannerPath: $bannerPath");
+
+    final accessToken = SharedPreferencesService.get<String>(
+      SharedPreferencesService.accessTokenKey,
+    ).toString();
+
+    final token = 'Bearer $accessToken';
+
+    final clientId = SharedPreferencesService.get<String>(
+      SharedPreferencesService.clientIdKey,
+    ).toString();
+
+    final clientSecret = SharedPreferencesService.get<String>(
+      SharedPreferencesService.clientSecretKey,
+    ).toString();
+
+    final timestamp = DateTime.now().toUtc().toIso8601String();
+
+    final signature = generateSignature(
+      path: '/add-banner',
+      verb: 'POST',
+      token: token,
+      timestamp: timestamp,
+      body: '',
+      userSecret: clientSecret,
+    );
+
+    final headers = <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Content-Type': 'multipart/form-data',
+      'Authorization': token,
+      'IDE-Timestamp': timestamp,
+      'Client-ID': clientId,
+      'IDE-Signature': signature,
+    };
+
+    final request = http.MultipartRequest("POST", Uri.parse(url));
+
+    request.headers.addAll(headers);
+    request.fields['banner_name'] = bannerName;
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'banner_image',
+        await File.fromUri(Uri.parse(bannerPath)).readAsBytes(),
+      ),
+    );
+
+    final response = await request.send();
+    final responseString = utf8.decode(await response.stream.toBytes());
+
+    print("response: $responseString");
+
+    if (response.statusCode != 200) {
+      Map<String, dynamic> responseJson = jsonDecode(responseString);
+      return Future.error(
+        responseJson['responseSystemMessage'] != ''
+            ? responseJson['responseSystemMessage']
+            : responseJson['responseMessage'],
+      );
+    }
+
+    // Map<String, dynamic> responseJson = jsonDecode(responseString);
+
+    // final bannerModel = BannersModel.fromJson(responseJson);
+
+    // return bannerModel.responseData;
   }
 }

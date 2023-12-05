@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:ide_test/pages/dashboard_page.dart';
+import 'package:ide_test/services/ide_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddBannerPage extends StatefulWidget {
@@ -9,9 +12,9 @@ class AddBannerPage extends StatefulWidget {
 }
 
 class _AddBannerPageState extends State<AddBannerPage> {
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
-  String _imagePath = '';
+  TextEditingController _bannerNameController = TextEditingController();
+  String _bannerImagePath = '';
+  bool _isLoading = false;
 
   Future<void> _pickImage() async {
     final pickedFile =
@@ -19,7 +22,7 @@ class _AddBannerPageState extends State<AddBannerPage> {
 
     if (pickedFile != null) {
       setState(() {
-        _imagePath = pickedFile.path;
+        _bannerImagePath = pickedFile.path;
       });
     }
   }
@@ -36,18 +39,12 @@ class _AddBannerPageState extends State<AddBannerPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: _titleController,
+              controller: _bannerNameController,
               decoration: InputDecoration(
-                labelText: 'Title',
+                labelText: 'Banner Name',
               ),
             ),
             SizedBox(height: 16.0),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: 'Description',
-              ),
-            ),
             SizedBox(height: 16.0),
             Row(
               children: [
@@ -67,14 +64,64 @@ class _AddBannerPageState extends State<AddBannerPage> {
               ],
             ),
             SizedBox(height: 8.0),
-            _imagePath.isNotEmpty
+            _bannerImagePath.isNotEmpty
                 ? Image.file(
-                    File(_imagePath),
+                    File(_bannerImagePath),
                     height: 100,
                     width: 100,
                     fit: BoxFit.cover,
                   )
                 : Container(),
+            ElevatedButton(
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
+
+                      final bannerName = _bannerNameController.text;
+                      final bannerPath = _bannerImagePath;
+
+                      try {
+                        await IdeService.addBanner(
+                          bannerName: bannerName,
+                          bannerPath: bannerPath,
+                        );
+
+                        Fluttertoast.showToast(
+                            msg: "Berhasil menambahkan banner");
+
+                        Navigator.pop(context);
+                      } catch (e) {
+                        print(e.toString());
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("Gagal menambahkan banner!"),
+                              content: Text(e.toString()),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Ok'),
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      } finally {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
+                    },
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Tambah'),
+            ),
           ],
         ),
       ),

@@ -5,7 +5,7 @@ import 'package:ide_test/services/shared_preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SharedPreferencesService.initialize();
+  SharedPreferencesService.initialize();
   runApp(const MyApp());
 }
 
