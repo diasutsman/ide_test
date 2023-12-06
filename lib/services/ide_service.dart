@@ -70,8 +70,6 @@ class IdeService {
       'body': body,
     });
 
-    print("Payload: $message");
-
     List<int> messageBytes = utf8.encode(message);
     List<int> key = base64.decode(base64Key);
     Hmac hmac = Hmac(sha256, key);
@@ -86,9 +84,6 @@ class IdeService {
     required String password,
   }) async {
     const url = "$baseUrl/api/login";
-
-    print("email: $email");
-    print("password: $password");
 
     final response = await http.post(
       Uri.parse(url),
@@ -147,8 +142,6 @@ class IdeService {
       }),
     );
 
-    print(response.body);
-
     if (response.statusCode != 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
       return Future.error(responseJson['message']);
@@ -157,9 +150,6 @@ class IdeService {
     Map<String, dynamic> responseJson = jsonDecode(response.body);
 
     final oauthTokenModel = OauthTokenModel.fromJson(responseJson);
-
-    print('accessToken: ${oauthTokenModel.accessToken}');
-    print('refreshToken: ${oauthTokenModel.refreshToken}');
 
     await SharedPreferencesService.setAccessToken(oauthTokenModel.accessToken);
 
@@ -177,8 +167,6 @@ class IdeService {
       Uri.parse(url),
       headers: getHeaders(path: path, verb: verb),
     );
-
-    print("response: ${response.body}");
 
     if (response.statusCode != 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -200,7 +188,12 @@ class IdeService {
     const url = "$baseUrl/api$path";
     const verb = 'POST';
 
-    final headers = getHeaders(path: path, verb: verb);
+    final headers = getHeaders(
+      path: path,
+      verb: verb,
+      //TODO: Find a way to get request body that being sent by `MultipartRequest` class
+      body: '',
+    );
 
     final request = http.MultipartRequest(verb, Uri.parse(url));
 
@@ -218,8 +211,6 @@ class IdeService {
     final response = await http.Response.fromStream(await request.send());
 
     final responseString = response.body;
-
-    print("response: $responseString");
 
     if (response.statusCode != 200) {
       Map<String, dynamic> responseJson = jsonDecode(responseString);

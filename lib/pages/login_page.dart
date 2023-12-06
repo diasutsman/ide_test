@@ -36,15 +36,15 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email',
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             TextField(
               obscureText: true,
               controller: _passwordController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
               ),
             ),
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => DashboardPage()),
+                                builder: (context) => const DashboardPage()),
                           );
                         } catch (e) {
                           showDialog(

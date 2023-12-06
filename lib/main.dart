@@ -24,7 +24,7 @@ class BannerApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       home: SharedPreferencesService.isLoggedIn
-          ? DashboardPage()
+          ? const DashboardPage()
           : const LoginPage(),
     );
   }

@@ -36,7 +36,7 @@ class DashboardPage extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddBannerPage()),
+            MaterialPageRoute(builder: (context) => const AddBannerPage()),
           );
         },
       ),
