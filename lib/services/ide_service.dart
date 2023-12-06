@@ -45,6 +45,7 @@ class IdeService {
     );
 
     return <String, String>{
+      'Content-Type': 'multipart/form-data',
       'Authorization': 'Bearer $accessToken',
       'IDE-Timestamp': timestamp,
       'Client-ID': clientId,
@@ -86,8 +87,14 @@ class IdeService {
   }) async {
     const url = "$baseUrl/api/login";
 
+    print("email: $email");
+    print("password: $password");
+
     final response = await http.post(
       Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode(<String, String>{
         "email": email,
         "password": password,
@@ -127,6 +134,9 @@ class IdeService {
     const url = "$baseUrl/oauth/token";
     final response = await http.post(
       Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode(<String, String>{
         "username": username,
         "password": password,
