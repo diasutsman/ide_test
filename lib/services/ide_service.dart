@@ -16,12 +16,48 @@ class IdeService {
     return data.keys.map((key) => "$key=${data[key]}").join("&");
   }
 
+  static Map<String, String> getHeaders({
+    required String path,
+    required String verb,
+    dynamic body = '',
+  }) {
+    final accessToken = SharedPreferencesService.get<String>(
+      SharedPreferencesService.accessTokenKey,
+    ).toString();
+
+    final clientId = SharedPreferencesService.get<String>(
+      SharedPreferencesService.clientIdKey,
+    ).toString();
+
+    final clientSecret = SharedPreferencesService.get<String>(
+      SharedPreferencesService.clientSecretKey,
+    ).toString();
+
+    final timestamp = DateTime.now().toUtc().toIso8601String();
+
+    final signature = generateSignature(
+      token: 'Bearer $accessToken',
+      timestamp: timestamp,
+      userSecret: clientSecret,
+      path: path,
+      verb: verb,
+      body: body,
+    );
+
+    return <String, String>{
+      'Authorization': 'Bearer $accessToken',
+      'IDE-Timestamp': timestamp,
+      'Client-ID': clientId,
+      'IDE-Signature': signature,
+    };
+  }
+
   static String generateSignature({
     required String path,
     required String verb,
+    dynamic body,
     required String token,
     required String timestamp,
-    dynamic body,
     required String userSecret,
   }) {
     String base64Key = base64Encode(utf8.encode(userSecret));
@@ -52,9 +88,6 @@ class IdeService {
 
     final response = await http.post(
       Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
       body: jsonEncode(<String, String>{
         "email": email,
         "password": password,
@@ -94,9 +127,6 @@ class IdeService {
     const url = "$baseUrl/oauth/token";
     final response = await http.post(
       Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
       body: jsonEncode(<String, String>{
         "username": username,
         "password": password,
@@ -126,66 +156,16 @@ class IdeService {
     await SharedPreferencesService.setRefreshToken(
       oauthTokenModel.refreshToken,
     );
-
-    // ! for testingc
-    // final accessTokenC = SharedPreferencesService.get<String>(
-    //   SharedPreferencesService.accessTokenKey,
-    // );
-
-    // final clientIdC = SharedPreferencesService.get<String>(
-    //   SharedPreferencesService.clientIdKey,
-    // );
-
-    // final clientSecretC = SharedPreferencesService.get<String>(
-    //   SharedPreferencesService.clientSecretKey,
-    // );
-
-    // print("oauthToken");
-    // print('accessToken $accessTokenC');
-    // print('clientId $clientIdC');
-    // print('clientSecret $clientSecretC');
   }
 
   static Future<List<BannerData>> listBanner() async {
-    const url = "$baseUrl/api/list-banner";
-    print("listBanner");
-    print("url: $url");
-    final accessToken = SharedPreferencesService.get<String>(
-      SharedPreferencesService.accessTokenKey,
-    ).toString();
-
-    final clientId = SharedPreferencesService.get<String>(
-      SharedPreferencesService.clientIdKey,
-    ).toString();
-
-    final clientSecret = SharedPreferencesService.get<String>(
-      SharedPreferencesService.clientSecretKey,
-    ).toString();
-
-    final timestamp = DateTime.now().toUtc().toIso8601String();
-
-    final signature = generateSignature(
-      path: '/list-banner',
-      verb: 'GET',
-      token: 'Bearer $accessToken',
-      timestamp: timestamp,
-      body: '',
-      userSecret: clientSecret,
-    );
-
-    final headers = <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $accessToken',
-      'IDE-Timestamp': timestamp,
-      'Client-ID': clientId,
-      'IDE-Signature': signature,
-    };
-
-    print("headers: ${headers['IDE-Timestamp']}");
+    const path = '/list-banner';
+    const url = "$baseUrl/api$path";
+    const verb = 'GET';
 
     final response = await http.get(
       Uri.parse(url),
-      headers: headers,
+      headers: getHeaders(path: path, verb: verb),
     );
 
     print("response: ${response.body}");
@@ -206,46 +186,13 @@ class IdeService {
     required String bannerName,
     required String bannerPath,
   }) async {
-    const url = "$baseUrl/api/add-banner";
-    print("addBanner");
-    print("url: $url");
-    print("bannerName: $bannerName");
-    print("bannerPath: $bannerPath");
+    const path = '/add-banner';
+    const url = "$baseUrl/api$path";
+    const verb = 'POST';
 
-    final accessToken = SharedPreferencesService.get<String>(
-      SharedPreferencesService.accessTokenKey,
-    ).toString();
+    final headers = getHeaders(path: path, verb: verb);
 
-    final token = 'Bearer $accessToken';
-
-    final clientId = SharedPreferencesService.get<String>(
-      SharedPreferencesService.clientIdKey,
-    ).toString();
-
-    final clientSecret = SharedPreferencesService.get<String>(
-      SharedPreferencesService.clientSecretKey,
-    ).toString();
-
-    final timestamp = DateTime.now().toUtc().toIso8601String();
-
-    final signature = generateSignature(
-      path: '/add-banner',
-      verb: 'POST',
-      token: token,
-      timestamp: timestamp,
-      body: '',
-      userSecret: clientSecret,
-    );
-
-    final headers = <String, String>{
-      'Content-Type': 'multipart/form-data',
-      'Authorization': token,
-      'IDE-Timestamp': timestamp,
-      'Client-ID': clientId,
-      'IDE-Signature': signature,
-    };
-
-    final request = http.MultipartRequest("POST", Uri.parse(url));
+    final request = http.MultipartRequest(verb, Uri.parse(url));
 
     request.headers.addAll(headers);
     request.fields['banner_name'] = bannerName;
@@ -272,11 +219,5 @@ class IdeService {
             : responseJson['responseMessage'],
       );
     }
-
-    // Map<String, dynamic> responseJson = jsonDecode(responseString);
-
-    // final bannerModel = BannersModel.fromJson(responseJson);
-
-    // return bannerModel.responseData;
   }
 }
