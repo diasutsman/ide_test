@@ -31,6 +31,8 @@ class _AddBannerPageState extends State<AddBannerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        forceMaterialTransparency: true,
         title: Text('Add Banner'),
       ),
       body: Padding(
@@ -63,65 +65,79 @@ class _AddBannerPageState extends State<AddBannerPage> {
                 ),
               ],
             ),
-            SizedBox(height: 8.0),
-            _bannerImagePath.isNotEmpty
-                ? Image.file(
-                    File(_bannerImagePath),
-                    height: 100,
-                    width: 100,
-                    fit: BoxFit.cover,
-                  )
-                : Container(),
-            ElevatedButton(
-              onPressed: _isLoading
-                  ? null
-                  : () async {
-                      setState(() {
-                        _isLoading = true;
-                      });
-
-                      final bannerName = _bannerNameController.text;
-                      final bannerPath = _bannerImagePath;
-
-                      try {
-                        await IdeService.addBanner(
-                          bannerName: bannerName,
-                          bannerPath: bannerPath,
-                        );
-
-                        Fluttertoast.showToast(
-                            msg: "Berhasil menambahkan banner");
-
-                        Navigator.pop(context);
-                      } catch (e, stacktrace) {
-                        print(e.toString());
-                        print(stacktrace.toString());
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text("Gagal menambahkan banner!"),
-                              content: Text(e.toString()),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Ok'),
-                                )
-                              ],
-                            );
-                          },
-                        );
-                      } finally {
+            const SizedBox(height: 8.0),
+            Expanded(
+              flex: 1,
+              child: _bannerImagePath == ''
+                  ? const Center(
+                      child:
+                          Text('Please pick image for the banner.'),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Image.file(
+                            File(_bannerImagePath),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 8.0),
+            SizedBox(
+              height: 55,
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading
+                    ? null
+                    : () async {
                         setState(() {
-                          _isLoading = false;
+                          _isLoading = true;
                         });
-                      }
-                    },
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Tambah'),
+
+                        final bannerName = _bannerNameController.text;
+                        final bannerPath = _bannerImagePath;
+
+                        try {
+                          await IdeService.addBanner(
+                            bannerName: bannerName,
+                            bannerPath: bannerPath,
+                          );
+
+                          Fluttertoast.showToast(
+                              msg: "Berhasil menambahkan banner");
+
+                          Navigator.pop(context);
+                        } catch (e, stacktrace) {
+                          print(e.toString());
+                          print(stacktrace.toString());
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text("Gagal menambahkan banner!"),
+                                content: Text(e.toString()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Ok'),
+                                  )
+                                ],
+                              );
+                            },
+                          );
+                        } finally {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
+                      },
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Tambah'),
+              ),
             ),
           ],
         ),

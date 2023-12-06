@@ -14,6 +14,8 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Banners'),
+        backgroundColor: Colors.transparent,
+        forceMaterialTransparency: true,
         actions: [
           IconButton(
             onPressed: () {
@@ -48,7 +50,7 @@ class DashboardPage extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             }
-        
+
             if (snapshot.hasError) {
               return const Center(
                 child: Text("Terjadi Error"),
