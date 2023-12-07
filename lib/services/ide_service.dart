@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -8,6 +9,7 @@ import 'package:ide_test/models/oauth_token_model.dart';
 import 'package:ide_test/services/shared_preferences_service.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
+import 'package:dio/dio.dart';
 
 class IdeService {
   static const String baseUrl = "https://api-entrance-test.infraedukasi.com";
@@ -180,6 +182,16 @@ class IdeService {
     return bannerModel.responseData;
   }
 
+  static Future<List<int>> getFinalizedFormData(
+    Stream<List<int>> source,
+  ) async {
+    List<int> res = [];
+    await for (List<int> value in source) {
+      res.addAll(value);
+    }
+    return res;
+  }
+
   static Future<void> addBanner({
     required String bannerName,
     required String bannerPath,
@@ -188,32 +200,50 @@ class IdeService {
     const url = "$baseUrl/api$path";
     const verb = 'POST';
 
+    final dio = Dio();
+
+    final formData = FormData.fromMap(
+      {
+        'banner_name': bannerName,
+        'file': await MultipartFile.fromFile(
+          bannerPath,
+          filename: basename(bannerPath),
+        ),
+      },
+    );
+
+    final body = await getFinalizedFormData(formData.clone().finalize());
+    var remainder = body.length % 8;
+
+    final toSend = base64Encode(
+      body 
+      // +
+      //     List.filled(remainder == 0 ? remainder : body.length - remainder, 0),
+    );
+
+    print("body:");
+    print(toSend);
+    print(remainder);
+
     final headers = getHeaders(
       path: path,
       verb: verb,
       //TODO: Find a way to get request body that being sent by `MultipartRequest` class
-      body: '',
+      body: toSend,
     );
 
-    final request = http.MultipartRequest(verb, Uri.parse(url));
-
-    request.headers.addAll(headers);
-    request.fields['banner_name'] = bannerName;
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'banner_image',
-        bannerPath,
-        filename: basename(bannerPath),
-        contentType: MediaType('image', 'jpeg'),
+    final response = await dio.post(
+      url,
+      data: formData,
+      options: Options(
+        validateStatus: (_) => true,
+        headers: headers,
       ),
     );
 
-    final response = await http.Response.fromStream(await request.send());
-
-    final responseString = response.body;
+    final responseJson = response.data;
 
     if (response.statusCode != 200) {
-      Map<String, dynamic> responseJson = jsonDecode(responseString);
       return Future.error(
         responseJson['responseSystemMessage'] != ''
             ? responseJson['responseSystemMessage']
