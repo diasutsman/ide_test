@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ide_test/services/ide_service.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
 
 class AddBannerPage extends StatefulWidget {
   const AddBannerPage({super.key});
@@ -82,15 +83,14 @@ class _AddBannerPageState extends State<AddBannerPage> {
                     ? const Center(
                         child: Text('Please pick image for the banner.'),
                       )
-                    : SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Image.file(
-                              File(_bannerImagePath),
-                            ),
-                          ],
-                        ),
+                    : PhotoView(
+                      imageProvider: FileImage(
+                        File(_bannerImagePath),
                       ),
+                      backgroundDecoration: const BoxDecoration(
+                        color: Colors.transparent,
+                      ),
+                    ),
               ),
               const SizedBox(height: 8.0),
               SizedBox(
