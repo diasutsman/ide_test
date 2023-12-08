@@ -5,10 +5,13 @@ class SharedPreferencesService {
 
   static const loggedInKey = 'logged_in';
   static const clientIdKey = 'client_id';
+  static const usernameKey = 'username';
+  static const passwordKey = 'password';
   static const clientIdSecretKey = 'client_secret';
   static const clientSecretKey = 'client_secret';
   static const accessTokenKey = 'access_token';
   static const refreshTokenKey = 'refresh_token';
+  static const tokenExpiredAtKey = 'token_expired_at';
 
   static Future<void> initialize() async {
     _preferences = await SharedPreferences.getInstance();
@@ -17,10 +20,14 @@ class SharedPreferencesService {
   static Future<void> login({
     required String cliendId,
     required String clientSecret,
+    required String username,
+    required String password,
   }) async {
     await _preferences?.setBool(loggedInKey, true);
     await _preferences?.setString(clientIdKey, cliendId);
     await _preferences?.setString(clientIdSecretKey, clientSecret);
+    await _preferences?.setString(usernameKey, username);
+    await _preferences?.setString(passwordKey, password);
   }
 
   static Future<void> setAccessToken(String accessToken) async {
@@ -37,6 +44,24 @@ class SharedPreferencesService {
 
   static String getRefreshToken() {
     return _preferences?.getString(refreshTokenKey) ?? '';
+  }
+
+  static Future<void> setTokenExpiredAt(int secondsUntilTokenExpired) async {
+    await _preferences?.setString(
+      tokenExpiredAtKey,
+      DateTime.now()
+          .add(Duration(seconds: secondsUntilTokenExpired))
+          .toUtc()
+          .toIso8601String(),
+    );
+  }
+
+  static bool get isTokenExpired {
+    final tokenExpiredAt = _preferences?.getString(
+          tokenExpiredAtKey,
+        ) ??
+        '';
+    return DateTime.parse(tokenExpiredAt).isAfter(DateTime.now().toUtc());
   }
 
   static T? get<T>(String key) {

@@ -18,14 +18,38 @@ class IdeService {
     return data.keys.map((key) => "$key=${data[key]}").join("&");
   }
 
-  static Map<String, String> getHeaders({
+  static Future<String> getAccessToken() async {
+    if (!SharedPreferencesService.isTokenExpired) {
+      return SharedPreferencesService.get<String>(
+        SharedPreferencesService.accessTokenKey,
+      ).toString();
+    }
+
+    final username =
+        SharedPreferencesService.get(SharedPreferencesService.usernameKey);
+    final password =
+        SharedPreferencesService.get(SharedPreferencesService.passwordKey);
+    final clientId =
+        SharedPreferencesService.get(SharedPreferencesService.clientIdKey);
+    final clientSecret =
+        SharedPreferencesService.get(SharedPreferencesService.clientSecretKey);
+
+    final oauthTokenModel = await oauthToken(
+      username: username,
+      password: password,
+      clientId: clientId,
+      clientSecret: clientSecret,
+    );
+
+    return oauthTokenModel.accessToken;
+  }
+
+  static Future<Map<String, String>> getHeaders({
     required String path,
     required String verb,
     dynamic body = '',
-  }) {
-    final accessToken = SharedPreferencesService.get<String>(
-      SharedPreferencesService.accessTokenKey,
-    ).toString();
+  }) async {
+    final accessToken = await getAccessToken();
 
     final clientId = SharedPreferencesService.get<String>(
       SharedPreferencesService.clientIdKey,
@@ -110,6 +134,8 @@ class IdeService {
     await SharedPreferencesService.login(
       cliendId: loginModel.responseData.clientId,
       clientSecret: loginModel.responseData.clientSecret,
+      username: loginModel.responseData.email,
+      password: password,
     );
 
     await oauthToken(
@@ -120,7 +146,7 @@ class IdeService {
     );
   }
 
-  static Future<void> oauthToken({
+  static Future<OauthTokenModel> oauthToken({
     required String username,
     required String password,
     required String clientId,
@@ -158,6 +184,12 @@ class IdeService {
     await SharedPreferencesService.setRefreshToken(
       oauthTokenModel.refreshToken,
     );
+
+    await SharedPreferencesService.setTokenExpiredAt(
+      oauthTokenModel.expiresIn,
+    );
+
+    return oauthTokenModel;
   }
 
   static Future<List<BannerData>> listBanner() async {
@@ -167,7 +199,7 @@ class IdeService {
 
     final response = await http.get(
       Uri.parse(url),
-      headers: getHeaders(path: path, verb: verb),
+      headers: await getHeaders(path: path, verb: verb),
     );
 
     if (response.statusCode != 200) {
@@ -215,17 +247,16 @@ class IdeService {
     final body = await getFinalizedFormData(formData.clone().finalize());
     var remainder = body.length % 8;
 
-    final toSend = base64Encode(
-      body 
-      // +
-      //     List.filled(remainder == 0 ? remainder : body.length - remainder, 0),
-    );
+    final toSend = base64Encode(body
+        // +
+        //     List.filled(remainder == 0 ? remainder : body.length - remainder, 0),
+        );
 
     print("body:");
     print(toSend);
     print(remainder);
 
-    final headers = getHeaders(
+    final headers = await getHeaders(
       path: path,
       verb: verb,
       //TODO: Find a way to get request body that being sent by `MultipartRequest` class
